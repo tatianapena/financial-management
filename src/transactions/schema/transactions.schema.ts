@@ -10,18 +10,20 @@ export enum TransactionType {
   EXPENSE = 'expense',
 }
 
-@Schema()
+@Schema({ collection: 'transactions', timestamps: true })
 export class Transaction {
-  @Prop({ type: mongoose.Schema.Types, auto: true })
-  _id: string;
+  @Prop({ type: mongoose.Schema.Types.ObjectId, auto: true })
+  _id: mongoose.Types.ObjectId;
   @Prop({ required: true })
   amount: number;
   @Prop({ required: true })
-  date: Date;
-  @Prop({ required: true })
   type: TransactionType;
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-  User: User[];
+  user: User;
+  @Prop()
+  description: string;
+  @Prop({ default: Date.now })
+  moveDate: Date;
 }
 
-export const TransactionSchema = SchemaFactory.createForClass(Transaction);
+export const transactionSchema = SchemaFactory.createForClass(Transaction);

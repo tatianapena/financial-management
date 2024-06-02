@@ -14,7 +14,10 @@ export class UserService {
   }
 
   async findAll(): Promise<User[]> {
-    return this.userModel.find().exec();
+    return await await this.userModel
+      .find({})
+      .populate(['transactions'])
+      .exec();
   }
   /* findAll() {
     return `This action returns all user`;
