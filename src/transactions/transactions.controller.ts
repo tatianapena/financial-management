@@ -9,9 +9,12 @@ import {
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
+import { UseGuards } from '@nestjs/common';
 /* import { UpdateTransactionDto } from './dto/update-transaction.dto';
  */
 @Controller('transactions')
+@UseGuards(JwtAuthGuard)
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 

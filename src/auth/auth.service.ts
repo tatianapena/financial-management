@@ -1,26 +1,62 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
-
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from 'src/user/schema/user.schema';
+import { Model } from 'mongoose';
+import { JwtService } from '@nestjs/jwt';
+import { AuthLoginDto } from './dto/authLogin.dto';
+import { AuthRegisterDto } from './dto/authRegister.dto';
+import { generateHashedPassword, verifyHashAndPassword } from './bcrypt/bcrypt';
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  constructor(
+    @InjectModel(User.name) private userModel: Model<User>,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async login(userToLogin: AuthLoginDto) {
+    const user = await this.userModel.findOne({ email: userToLogin.email });
+    if (!user) {
+      return null;
+    }
+    const passwordsMatch = await verifyHashAndPassword(
+      userToLogin.password,
+      user.password,
+    );
+    if (passwordsMatch) {
+      const token = this.jwtService.sign({
+        email: user.email,
+        capital: user.capital,
+      });
+      return {
+        access_token: token,
+      };
+    } else {
+      return null;
+    }
+  }
+  async register(user: AuthRegisterDto) {
+    const existingUser = await this.userModel.findOne({ email: user.email });
+    if (existingUser) {
+      return 'User already exists';
+    }
+    user.password = await generateHashedPassword(user.password);
+    const createdUser = new this.userModel(user);
+    return createdUser.save();
   }
 
-  findAll() {
-    return `This action returns all auth`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  async validate(userToValidate: AuthLoginDto) {
+    const user = await this.userModel.findOne({ email: userToValidate.email });
+    if (!user) {
+      return null;
+    }
+    const passwordsMatch = await verifyHashAndPassword(
+      userToValidate.password,
+      user.password,
+    );
+    if (passwordsMatch) {
+      return user;
+    } else {
+      return null;
+    }
   }
 }
