@@ -9,12 +9,9 @@ import {
 } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
-import { UseGuards } from '@nestjs/common';
-/* import { UpdateTransactionDto } from './dto/update-transaction.dto';
- */
+import { UpdateTransactionDto } from './dto/update-transaction.dto';
+
 @Controller('transactions')
-@UseGuards(JwtAuthGuard)
 export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
@@ -22,7 +19,7 @@ export class TransactionsController {
   create(@Body() createTransactionDto: CreateTransactionDto) {
     return this.transactionsService.create(createTransactionDto);
   }
-  /* 
+
   @Get()
   findAll() {
     return this.transactionsService.findAll();
@@ -30,16 +27,25 @@ export class TransactionsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.transactionsService.findOne(+id);
+    return this.transactionsService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTransactionDto: UpdateTransactionDto) {
-    return this.transactionsService.update(+id, updateTransactionDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateTransactionDto: UpdateTransactionDto,
+  ) {
+    return this.transactionsService
+      .update(id, updateTransactionDto)
+      .catch((e) => {
+        throw e;
+      });
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.transactionsService.remove(+id);
-  } */
+    return this.transactionsService.delete(id).catch((e) => {
+      throw e;
+    });
+  }
 }

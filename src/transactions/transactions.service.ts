@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-/* import { UpdateTransactionDto } from './dto/update-transaction.dto'; */
+import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { Transaction } from './schema/transactions.schema';
 import { User } from 'src/user/schema/user.schema';
 import { NotFoundException } from '@nestjs/common';
@@ -35,19 +35,38 @@ export class TransactionsService {
     await transactionUser.save();
   }
 
-  /*   findAll() {
-    return `This action returns all transactions`;
+  async findAll(): Promise<Transaction[]> {
+    return await this.transactionModel.find().exec();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} transaction`;
+  async findOne(id: string): Promise<Transaction> {
+    const transaction = await this.transactionModel.findById(id).exec();
+    if (!transaction) {
+      throw new NotFoundException(`Transaction #${id} not found`);
+    }
+    return transaction;
   }
 
-  update(id: number, updateTransactionDto: UpdateTransactionDto) {
-    return `This action updates a #${id} transaction`;
+  async update(
+    id: string,
+    updateTransactionDto: UpdateTransactionDto,
+  ): Promise<Transaction> {
+    const updatedTransaction = await this.transactionModel
+      .findByIdAndUpdate(id, updateTransactionDto, { new: true })
+      .exec();
+    if (!updatedTransaction) {
+      throw new NotFoundException(`Transaction #${id} not found`);
+    }
+    return updatedTransaction;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} transaction`;
-  } */
+  async delete(id: string): Promise<string> {
+    const deletedTransaction = await this.transactionModel
+      .findByIdAndDelete(id)
+      .exec();
+    if (!deletedTransaction) {
+      throw new NotFoundException(`Transaction #${id} not found`);
+    }
+    return `Transaction #${id} successfully deleted`;
+  }
 }

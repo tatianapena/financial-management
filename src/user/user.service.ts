@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
-/* import { UpdateUserDto } from './dto/update-user.dto'; */
+import { UpdateUserDto } from './dto/update-user.dto';
 import { Model } from 'mongoose';
 import { User } from './schema/user.schema';
 @Injectable()
@@ -10,28 +14,52 @@ export class UserService {
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const createdUser = new this.userModel(createUserDto);
-    return createdUser.save();
+    return createdUser.save().catch((e) => {
+      throw new InternalServerErrorException('Error creating user');
+    });
   }
 
   async findAll(): Promise<User[]> {
-    return await await this.userModel
+    return await this.userModel
       .find({})
       .populate(['transactions'])
-      .exec();
-  }
-  /* findAll() {
-    return `This action returns all user`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+      .exec()
+      .catch((e) => {
+        throw new InternalServerErrorException('Error finding users');
+      });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async findOne(id: string) {
+    return await this.userModel.findById(id).catch((e) => {
+      throw new InternalServerErrorException('Error getting user');
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  } */
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<string> {
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      id,
+      updateUserDto,
+      { new: true },
+    );
+    if (!updatedUser) {
+      throw new NotFoundException('User not found');
+    }
+    return 'User updated successfully';
+  }
+
+  async delete(id: string) {
+    const user = await this.userModel.findById(id).catch((e) => {
+      throw new InternalServerErrorException('Error getting user');
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.userModel.findByIdAndDelete(id).catch((e) => {
+      throw new InternalServerErrorException('Error deleting user');
+    });
+
+    return 'User deleted successfully';
+  }
 }
